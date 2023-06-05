@@ -17,12 +17,12 @@ app.get("/", (req, res) => {
 const verifyJWT=(req,res,next)=>{
   const authorization=req.headers.authorization;
   if(!authorization){
-    return res.send({error:true, message:'unauthorized'})
+    return res.status(401).send({error:true, message:'unauthorized'})
   }
   const token=authorization.split(' ')[1];
   jwt.verify(token, process.env.ACCESS_TOKEN, (error,decoded)=>{
     if(error){
-      return res.send({error:true, message:'unauthorized'})
+      return res.status(401).send({error:true, message:'unauthorized'})
     }
     req.decoded=decoded;
     next()
@@ -46,8 +46,9 @@ async function run() {
   try {
     await client.connect();
 
-    const serviceCollection = client.db("woman_parlour").collection("services");
     const userCollection = client.db("woman_parlour").collection("users");
+    const serviceCollection = client.db("woman_parlour").collection("services");
+    const bookedCollection = client.db("woman_parlour").collection("booked");
 
     app.post('/jwt',(req,res)=>{
       const loggedUser=req.body;
@@ -75,15 +76,23 @@ async function run() {
       const result=await serviceCollection.findOne(query);
       res.send(result)
     })
-
+    // get users
     app.get('/users',async(req,res)=>{
       const result=await userCollection.find().toArray()
       res.send(result)
     })
 
+    // user post api
     app.post('/users',async(req,res)=>{
       const user=req.body;
       const result=await userCollection.insertOne(user)
+      res.send(result)
+    })
+
+    // booked service post
+    app.post('/booked',verifyJWT,async(req,res)=>{
+      const bookService=req.body;
+      const result=await bookedCollection.insertOne(bookService);
       res.send(result)
     })
 
