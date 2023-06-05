@@ -2,10 +2,13 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
 const cors = require("cors");
+const stripe=require('stripe')(process.env.PAYMENT_KEY)
 const jwt = require('jsonwebtoken')
 require("dotenv").config();
 
-app.use(cors());
+app.use(cors({
+  origin:'*',
+}));
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -120,6 +123,18 @@ async function run() {
       const result=await bookedCollection.deleteOne(query)
       res.send(result)
     })
+
+    // payment intent
+    // app.post('/payment-intent',async(req,res)=>{
+    //   const {price}=req.body;
+    //   const amount=parseInt(price*100);
+    //   const paymentIntent=await stripe.paymentIntents.create({
+    //     amount:amount,
+    //     currency:'usd',
+    //     payment_method_types:['card']
+    //   })
+    //   res.send({clientSecret:paymentIntent.secret})
+    // })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
